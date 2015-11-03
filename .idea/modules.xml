@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/type-script.iml" filepath="$PROJECT_DIR$/.idea/type-script.iml" />
+      <module fileurl="file://$USER_HOME$/dev/ng-2-slides/.idea/ng-2.iml" filepath="$USER_HOME$/dev/ng-2-slides/.idea/ng-2.iml" />
     </modules>
   </component>
 </project>

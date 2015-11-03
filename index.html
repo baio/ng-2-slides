@@ -4,7 +4,7 @@
 	<head>
 		<meta charset="utf-8">
 
-		<title>Type Script</title>
+		<title>NG-2</title>
 
 		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
 		<meta name="author" content="Hakim El Hattab">
@@ -41,113 +41,139 @@
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<section class="slides">
 				<section>
-					<h1>Why Type Script ?</h1>
+					<h1>Angular 2</h1>
 					<p>
 						<small>Created by <a href="mailto:max.putilov@gmail.com">Max Putilov</a> / <a href="https://twitter.com/baio1980">@baio1980</a></small>
 					</p>
 				</section>
 
 				<section>
-					<h2>So why ?</h2>
+					<h2><strike>What's new ?</strike></h2>
+					<h2>What's old ?</h2>
 					<ul>
-						<li>Module system</li>
-						<li>Typing (only big difference)</li>
-						<li>Transpiler (ie ES6 to ES5)</li>
-						<li>Annotations (bonus)</li>
+						<li>Scopes</li>
+						<li>Wired rules of scope inheretance</li>
+						<li>Controllers</li>
+						<li>Transclusion</li>
 					</ul>
 				</section>
 
 				<section>
-					<h2>That good typings for ?</h2>
-					<ul>
-						<li>Good for big projects
-							<ul>
-								<li>Tests for free</li>
-								<li>No fear! Refactor code when necessary</li>
-							</ul>
-						</li>
-						<li>Better code insight
-							<pre><code data-trim contenteditable>
-function func(a, b) {...}
-//that I should pass to function?
-//that function returns?
-//need to spend time
-//looking up implemetation and infere
-//parameters
-
-							</code></pre>
-						</li>
-						<li>Better tooling (autocomplition, refactoring)</li>
+					<h2>No new bycicles</h2>
+					<li>Module system = ES 6</li>
+					<li>Dependency injections (TS Types, ES 7?)</li>
+					<li>Directives ans services just classes with attributes</li>
+					<li>Consistent syntax of defining directives properties and events</li>
 					</ul>
 				</section>
 
 				<section>
-					<h2>Type definitions, no brain!</h2>
-					<h3>Basic types</h3>
+					<h2>Components</h2>
 						<pre>
 							<code data-trim contenteditable>
-var name : string = "max";
 
-var age : number = 38;
+const template = `
+	&lt;div class="login"&gt;
+	&lt;h1&gt;Login&lt;/h1&gt;
+		&lt;form role="form" (submit)="login(username.value, password.value)"&gt;
+		&lt;div class="form-group"&gt;
+				&lt;label>Username&lt;/label&gt;
+				&lt;input type="text" #username &gt;
+			&lt;/div&gt;
+			&lt;div class="form-group"&gt;
+				&lt;label >Password&lt;/label&gt;
+				&lt;input type="password" #password &gt;
+			&lt;/div&gt;
+			&lt;button type="submit" &gt;Submit&lt;/button&gt;
+		&lt;/form&gt;
+	&lt;/div&gt;
+`;
 
-name = 12; // error here, types difference !
+@Component({
+	selector: 'login-form'
+})
+@View({
+	directives: [RouterLink],
+	template: template,
+})
+export class LoginForm {
 
-var sex : boolean = true;
+	constructor(private router: Router,
+		private authService: AuthService) {
 
-var list : string[] = ["one", "two"];
-//same as a List&lt;string&gt;, Array&lt;string&gt;
+	}
+
+	login(username, password)  {
+
+		...
+
+	}
+}
+
 
 							</code>
 						</pre>
 
-					<h3> <code>any</code> - Special </h3>
 				</section>
 
 				<section>
-					<h2>Any Type</h2>
-					<p>Special type, basically do nothing
+					<h2>Directives</h2>
 						<pre>
 							<code data-trim contenteditable>
-var name : any = "word";
-name = 12; //ok !
-							</code>
-						</pre>
-					Often used to cast types when necessary
-<pre>
-	<code data-trim contenteditable>
-var name : string = "word";
-var age : number = 30;
-name = &lt;any&gt; age; //ok !
-	</code>
+					
+import {Directive, Input, ViewContainerRef, TemplateRef} from 'angular2/angular2'
+import {AuthService} from './services/auth-service'
+import {Subject} from "@reactivex/rxjs/dist/cjs/Rx"
+
+@Directive({
+  selector: '[if-auth]',
+  properties: ['ifAuth']
+})
+export class IfAuth {
+  
+   ifAuthChanged: Subject<boolean> = new Subject<boolean>();  
+      
+   set ifAuth(val: boolean) {
+      this.ifAuthChanged.next(val);         
+   }
+      
+  constructor(private viewContainer: ViewContainerRef, private templateRef: TemplateRef, private authService: AuthService) {
+        
+    //TODO: unsubscribe
+    authService.userChanged.combineLatest(this.ifAuthChanged).subscribe((val: [any, any]) => {
+      var user: boolean, flag: boolean;
+      [user, flag] = val;
+      if ((flag && user) || (!flag && !user)) {
+          this.viewContainer.createEmbeddedView(this.templateRef);
+      }
+      else {
+          this.viewContainer.clear();
+      }
+    });
+    	  
+  }
+  
+}
 </pre>
-					</p>
+</code>
+
 				</section>
 
 
 				<section>
-					<h2>Interfaces, custom types</h2>
+
+					<h2>Services (Just classes)</h2>
 						<pre>
 							<code data-trim contenteditable>
-interface IPerson {
-	name : string
-	age? : number // could be omitted on instantiation
-}
 
-var person : IPerson = { name : "max" }; //ok
+@Injectable()
+export class UserEP {
+	
+	constructor(private endPoint: EndPoint) {		
+	}
+	...		  		 
+} 
 
-var person : IPerson = {}; //error, name is required !
-
-var person : IPerson = &lt;any&gt; {}; //ok, any magic
-
-var person : IPerson = {
-	name: string,
-	age: 35,
-	sex: "male" // notice not declared field, better not use !!!
-}; // also ok
-
-// BUT
-person.id = 100; // error !
-(&lt;any&gt;person).id = 100; //ok
 
 							</code>
 						</pre>
@@ -155,61 +181,51 @@ person.id = 100; // error !
 				</section>
 
 				<section>
-					<h2>Enums</h2>
+
+					<h2>Routing (Just work)</h2>
+					<p>Baked in framework, defined for each component</p>
 						<pre>
 							<code data-trim contenteditable>
-enum MediaType {image, video};
 
-var mType : MeiaType = MediaType.image; //ok
-mType = "video"; // error
+@RouteConfig([
+    { path: "/", redirectTo: "/social/popular"},
+    { path: "/social/...", component: PopularPage, as: "Social" },
+    { path: "/social/profiles/:id/...", component: FeedPage, as: "Profile" }
+])
+class App...
 
-//Actually numbers
+@RouteConfig([
+    { path: "/feed/...", component: FeedList, as : "Feed" },
+])
+class FeedPage...
 
-assert(mType.image == 0); //true
-
-//Starts from zero, can be redefined
-
-enum MediaType {image = 1, video = 10};
-
-//Actually can convert to string (wierd !)
-
-assert(MeiaType[MeiaType.image] == "image"); //true
-
+@RouteConfig([
+    { path: "/feed/post/:id/", component: PostItem, as : "PostItem" },
+])
+class FeedItem...
+</pre>
 							</code>
-						</pre>
-
-				</section>
-
-				<section data-markdown>
-					<script type="text/template">
-						##Enum hickups
-						Data from server usually define enum fields as "strings"
-						`{mType : "image"}`, no way to direct convert into TypeScript enum value
-
-						No sence to use in html templates, since no type checking here
-						&lt;span ng-if="mType == MediaType.audio"&gt;&lt;/span&gt;
-						no error, but type `audio` not exists.
-
-						Popular demand to have enums defined with string values, should be added in future versions.
-						Better IDE support also coming.
-					</script>
-
 
 				</section>
 
 				<section>
-					<h2>Function declaration</h2>
+					<h2>Reactive Support</h2>
+					<h3>Events are observables</h3>
+					<h3>Input controls have `changes` property which is observable</h3>
 						<pre>
 							<code data-trim contenteditable>
 
-function save(id: string, person: IPerson) : IPromise&lt;boolean&gt; {
-	//error nothing returns
-}
+@View(
+	template: "&lt;div ng-for='item of items | async'&gt;"
+)
+class List {
 
-//error first parameter must be a string !
-save(10, {name : "max"}).then((res) =>
-	console.log(res.sex); // error, no field sex, on type IPerson
-);
+	items: Observable&lt;IItem&gt;
+		
+	load() {
+		this.items = this.loadService.load();
+	}		
+}
 
 							</code>
 						</pre>
@@ -217,157 +233,14 @@ save(10, {name : "max"}).then((res) =>
 				</section>
 
 				<section>
-				<section>
-					<h2>Transpiler</h2>
-					<p>TypeScript -> ES6, ES5, ES3, you choose</p>
-					<h3>ES 6</h3>
-						<pre>
-							<code data-trim contenteditable>
-class Calc {
-	var a;
-	constructor (var a) { this.a = a; }
-	add = (a, b) => a + b;
-	sub(a, b) {return a - b;}
-
-}
-							</code>
-						</pre>
-				</section>
-				<section>
-					<h3>Type Script</h3>
-						<pre>
-							<code data-trim contenteditable>
-class Calc {
-var a : number;
-constructor (var a: number) { this.a = a; }
-add = (a: number, b: number) : number => a + b;
-sub(a: number, b: number) : number {return a - b;}
-
-}
-							</code>
-						</pre>
-					<p>Look, TypeScript added only Types ! Important to distinct ES6 features and TypeScript features !</p>
-				</section>
-				<section>
-					<p>Caveat, you can define constructor from above as</p>
-						<pre>
-							<code data-trim contenteditable>
-constructor (private var a: number) {  }
-							</code>
-						</pre>
-					<p>Indeed type script, add not only type features!</p>
-				</section>
-				</section>
-
-				<section>
-				<section>
-					<h2>More</h2>
-					<h3>Inheritance</h3>
-					<p>Same rules as in other object oriented languages</p>
-										<pre>
-											<code data-trim contenteditable>
-interface IPersonEx extends IPerson {
-	sex : string
-}
-											</code>
-										</pre>
-
-				</section>
-				<section>
-					<h3>Declare</h3>
-					<p>Declare external global variables, for example global windows object object</p>
-					<pre>
-						<code data-trim contenteditable>
-declare var window; //have any type automatically
-						</code>
-					</pre>
-
-				</section>
-				</section>
-
-				<section>
-				<section>
-					<h2>External modules definitions</h2>
-					<p>
-						If we use external js libraries in project and would like to have typings for these libraries,
-						it is possible to add types declarations separately (like header files in C)
-						You can use jquery library and create type definitions for one (jquery.d.ts) or you can download
-						type definition file from <a href="http://definitelytyped.org/">definitelytyped.org</a>
-					</p>
-				</section>
-				<section>
-					<h3>Note</h3>
-					<p>
-						You must not declare type definition files (d.ts) for your own type script code.
-						These files will be compiled automatically.
-						Basically transpiler output transpiled ts file in form of js file, which you could use
-						in other js projects and type defintion file d.ts which you can include to type script
-						pojects to have typings benefit.
-					</p>
-				</section>
-				</section>
-
-				<section>
-				<section>
-					<h2>Module system</h2>
-					<p>
-						ES 5, have not module support, but we can imitate it by space names (scopes in js)
-					</p>
-					<pre>
-						<code data-trim contenteditable>
-module RootModule {
-	export class A {}
-}
-module SecondModule {
-	export class A {}
-}
-//and use it
-var A1 = RootModule.A;
-var A2 = SecondModule.A;
-						</code>
-					</pre>
-					<p>`module` keyword is somehow misguided since it is not module in common language definition but simple namespace.</p>
-				</section>
-				<section>
-					<p>
-						ES 6 modules
-					</p>
-				<pre>
-					<code data-trim contenteditable>
-//file rootFile.js
-export class A {}
-}
-//file seconFile.js
-export class B {}
-}
-//file index.js
-import {A as A1} from "rootFile"
-import {A as A2} from "secondFile"
-					</code>
-				</pre>
-					<p>Can be transpiled to 2 types of module systems of ES5 (not statdardized) amd and commonjs </p>
-					<p>TypeScript module aka namespace -> transpiled to ES 5 "modules"</p>
-					<p>ES6 module (v 1.5) -> transpiled to ES 5 "modules"</p>
-				</section>
-				</section>
-
-				<section>
-					<h3>Links</h3>
+					<h2>Migration Path</h2>
 					<ul>
-						<li>
-							<a href="http://definitelytyped.org/">Typings for exitents java script libraries</a>
-						</li>
-						<li>
-							<a href="http://www.typescriptlang.org/Handbook">Type Script handbook</a>
-						</li>
-						<li>
-							<a href="https://github.com/lukehoban/es6features">ES6 features</a>
-						</li>
-					</ul>
+						<li> Use ng-forwad for Ng-2 syntax in angular projects </li>
+						<li> Use ng-update for ng-1 & ng-2 live in the same project </li>
+					</ul>						
 				</section>
 
 
-			</section>
 		</div>
 
 		<script src="lib/js/head.min.js"></script>
